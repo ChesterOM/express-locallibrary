@@ -21,15 +21,23 @@ const limiter = RateLimit({
 
 //MONGOOSE SETUP
 const mongoose = require('mongoose');
-const dotenv = require('dotenv').config()
+
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
 
 mongoose.set('strictQuery', false);
 
 const mongoDB = process.env.DATABASE_URI;
 
-main().catch(err => console.log(err));
+main().catch(err => console.log("MongoDB connection error:", err));
+
 async function main() {
-  await mongoose.connect(mongoDB);
+  await mongoose.connect(mongoDB, {
+    useNewUrlParser: true, 
+    useUnifiedTopology: true
+  });
+  console.log("Connected to MongoDB!");
 }
 
 // view engine setup
@@ -41,6 +49,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(compression());
+app.set('trust proxy', 1);
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
